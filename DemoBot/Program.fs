@@ -34,7 +34,6 @@ let processMessageBuild config =
 
     let botResult data = api config data |> Async.RunSynchronously
     let bot data = botResult data |> processResult
-
     let updateArrived ctx =
         let fromId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
                      else ctx.Update.CallbackQuery.Value.From.Id       
@@ -43,33 +42,10 @@ let processMessageBuild config =
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> (Calendar.show fromId "Please select a date")|>bot)
+                Calendar.handleUpdate config (fun date->sendMessage fromId (date.ToLongDateString())|>bot)
             ]
         if notHandled then             
-            let defaultMsg()=bot (sendMessage fromId defaultText)
-            match ctx.Update.CallbackQuery with
-            | Some q->
-                       let handle handler confirmed=
-                              optional {
-                                let! r= handler q
-                                return match r with
-                                        |InlineKeyboard.Empty resp->resp|>bot
-                                        |InlineKeyboard.Edited resp->resp|>bot
-                                        |InlineKeyboard.Confirmed (d,resp)-> 
-                                                     resp|>bot                                                     
-                                                     (fromId,d)
-                                                     |>confirmed
-                              }
-                       let hr=seq{
-                                    yield handle Calendar.handleUpdate (fun (from,date)->sendMessage from (date.ToLongDateString())|>bot)
-                                    //yield handle ChoiceControl.handleUpdate (AnsweredTarget>>FromWoman>>pushEvt)
-                                }
-                                |>Seq.choose(fun x->x)
-                                |>Seq.tryHead
-                       
-                       match hr with
-                       |Some r->r
-                       |None -> defaultMsg()
-            | None->defaultMsg()
+            bot (sendMessage fromId defaultText)           
     updateArrived
 
 let start token =

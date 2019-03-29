@@ -1,6 +1,6 @@
 ﻿namespace Funogram
 [<AutoOpen>]
-module Optional=
+module internal Optional=
   type OptionalBuilder() =
     member __.Bind(opt, binder) =
       match opt with

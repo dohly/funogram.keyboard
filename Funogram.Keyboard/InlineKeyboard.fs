@@ -11,6 +11,7 @@ module InlineKeyboard=
  type MessageText=string
  type StateToKeyboard<'a>='a->InlineKeyboardMarkup*MessageText
  type StringToState<'a>=string->'a option
+ type SendAnswer<'a>=RequestsTypes.IRequestBase<'a>->unit
  type HandleResult<'state>=
             |Edited of EditMessageTextReq
             |Empty of AnswerCallbackQueryReq
@@ -96,3 +97,16 @@ module InlineKeyboard=
          let! typeAndPayload=extractTypePayload parts
          return! switch typeAndPayload
         }  
+ 
+ let tryHandleUpdate config confirmed keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) (ctx:UpdateContext)=
+    let bot data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
+    let r=optional{
+            let! q=ctx.Update.CallbackQuery
+            return! handleUpdate keyboardId tryParse getKb q      
+            }|>Option.map(function
+                    |Empty resp->resp|>bot
+                    |Edited resp->resp|>bot
+                    |Confirmed (state,resp)->resp|>bot  
+                                             state|>confirmed)
+    r.IsNone
+      

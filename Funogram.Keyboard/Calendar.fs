@@ -4,6 +4,7 @@ module Calendar=
     open System
     open System.Globalization   
     open Funogram.Keyboard.Inline
+    open Funogram.Bot
 
     [<Literal>]
     let private CALENDAR="CALENDAR"
@@ -56,9 +57,9 @@ module Calendar=
         initialMsg<-msg /// smell
         InlineKeyboard.show (keyboard msg) DateTime.Now true toId
 
-    let handleUpdate (q:CallbackQuery)=
+    let handleUpdate cfg confirmed (ctx:UpdateContext)=
             let tryParse (d:string)=
                         match DateTime.TryParse d with
                             |true, dt->dt|>Some
                             |_->None
-            q|>InlineKeyboard.handleUpdate CALENDAR tryParse (keyboard initialMsg)
+            ctx|>InlineKeyboard.tryHandleUpdate cfg confirmed CALENDAR tryParse (keyboard initialMsg)
