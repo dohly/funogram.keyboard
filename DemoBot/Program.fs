@@ -7,6 +7,8 @@ open Funogram.Bot
 open Funogram.Types
 open FunHttp
 open System.Net.Http
+open Funogram.Keyboard
+open Funogram.Keyboard.Inline
 
 
 [<Literal>]
@@ -34,14 +36,40 @@ let processMessageBuild config =
     let bot data = botResult data |> processResult
 
     let updateArrived ctx =
-        let fromId() = ctx.Update.Message.Value.From.Value.Id        
-        let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId())) text (Some parseMode) None None None None) |> bot
-
+        let fromId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
+                     else ctx.Update.CallbackQuery.Value.From.Id       
+        let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId)) text (Some parseMode) None None None None) |> bot
+        
         let notHandled =
             processCommands ctx [
-                cmd "/calendar"  (fun _ -> sendMessageFormatted "Calendar Demo" ParseMode.Markdown)
+                cmd "/calendar"  (fun _ -> (Calendar.show fromId "Please select a date")|>bot)
             ]
-        if notHandled then bot (sendMessage (fromId()) defaultText)
+        if notHandled then             
+            let defaultMsg()=bot (sendMessage fromId defaultText)
+            match ctx.Update.CallbackQuery with
+            | Some q->
+                       let handle handler confirmed=
+                              optional {
+                                let! r= handler q
+                                return match r with
+                                        |InlineKeyboard.Empty resp->resp|>bot
+                                        |InlineKeyboard.Edited resp->resp|>bot
+                                        |InlineKeyboard.Confirmed (d,resp)-> 
+                                                     resp|>bot                                                     
+                                                     (fromId,d)
+                                                     |>confirmed
+                              }
+                       let hr=seq{
+                                    yield handle Calendar.handleUpdate (fun (from,date)->sendMessage from (date.ToLongDateString())|>bot)
+                                    //yield handle ChoiceControl.handleUpdate (AnsweredTarget>>FromWoman>>pushEvt)
+                                }
+                                |>Seq.choose(fun x->x)
+                                |>Seq.tryHead
+                       
+                       match hr with
+                       |Some r->r
+                       |None -> defaultMsg()
+            | None->defaultMsg()
     updateArrived
 
 let start token =
