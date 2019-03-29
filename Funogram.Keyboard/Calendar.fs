@@ -13,8 +13,7 @@ module Calendar=
     let B=ChangeState>>btn    
     let X=Ignore>>btn
     let OK=Confirm>>btn
-    let mutable private initialMsg=""
-    let private keyboard text :StateToKeyboard<DateTime>=
+    let private keyboard :StateToKeyboard<DateTime>=
               fun d-> 
                let daysInMonth=DateTime.DaysInMonth(d.Year, d.Month)
                let fdow = int CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek               
@@ -51,15 +50,14 @@ module Calendar=
                              yield! days|>List.map(dayBtn)
                           yield OK(sprintf "OK (%s)" (d.ToShortDateString()), d)
                         })
-               (kb,text)
+               kb
     
     let show toId msg=
-        initialMsg<-msg /// smell
-        InlineKeyboard.show (keyboard msg) DateTime.Now true toId
+        InlineKeyboard.show keyboard msg DateTime.Now true toId
 
     let handleUpdate cfg confirmed (ctx:UpdateContext)=
             let tryParse (d:string)=
                         match DateTime.TryParse d with
                             |true, dt->dt|>Some
                             |_->None
-            ctx|>InlineKeyboard.tryHandleUpdate cfg confirmed CALENDAR tryParse (keyboard initialMsg)
+            ctx|>InlineKeyboard.tryHandleUpdate cfg confirmed CALENDAR tryParse keyboard

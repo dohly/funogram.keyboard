@@ -9,7 +9,7 @@ module InlineKeyboard=
  type Payload=string
  type KeyboardId=string
  type MessageText=string
- type StateToKeyboard<'a>='a->InlineKeyboardMarkup*MessageText
+ type StateToKeyboard<'a>='a->InlineKeyboardMarkup
  type StringToState<'a>=string->'a option
  type SendAnswer<'a>=RequestsTypes.IRequestBase<'a>->unit
  type HandleResult<'state>=
@@ -54,20 +54,20 @@ module InlineKeyboard=
  let build buttons=      
      { InlineKeyboard =buttons }
 
- let show<'a> (getKb:StateToKeyboard<'a>) state notify toId= 
-        let (kb, text)=state|>getKb
+ let show<'a> (getKb:StateToKeyboard<'a>) text state notify toId= 
+        let kb=state|>getKb
         let markup=kb|>Markup.InlineKeyboardMarkup
         let req=Api.sendMessageMarkup toId text markup
         {req with DisableNotification=Some notify}
  
- let handleUpdate keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) (q:CallbackQuery)=
+ let handleUpdate keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) text (q:CallbackQuery)=
         let extractTypePayload (parts:string[])=
             if parts.[0]=keyboardId then Some (parts.[1], parts.[2])
             else None
         let skip()=(Api.answerCallbackQueryBase(Some(q.Id)) None None None None)
         let delete()=Api.deleteMessage(q.Message.Value.Chat.Id)(q.Message.Value.MessageId)            
         let edit newState=
-            let (kb,text)=newState|>getKb
+            let (kb)=newState|>getKb
             Api.editMessageTextBase
                      (Some(q.Message.Value.Chat.Id|>ChatId.Int)) 
                      (Some(q.Message.Value.MessageId))
@@ -102,7 +102,9 @@ module InlineKeyboard=
     let bot data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
     let r=optional{
             let! q=ctx.Update.CallbackQuery
-            return! handleUpdate keyboardId tryParse getKb q      
+            let! msg=q.Message
+            let! txt=msg.Text
+            return! handleUpdate keyboardId tryParse getKb txt q      
             }|>Option.map(function
                     |Empty resp->resp|>bot
                     |Edited resp->resp|>bot
