@@ -7,8 +7,6 @@ module ConfirmKeyboard =
     let private CONFIRM="CONFIRM"
     let private serialize (b:bool)= b |> System.Convert.ToString  
     let private btn=buildButton CONFIRM serialize
-    let private B=ChangeState>>btn    
-    let private X=Ignore>>btn
     let private OK=Confirm>>btn
     let private keyboard :StateToKeyboard<bool>=
               fun selected-> 
