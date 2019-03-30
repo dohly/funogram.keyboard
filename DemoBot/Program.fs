@@ -9,6 +9,7 @@ open FunHttp
 open System.Net.Http
 open Funogram.Keyboard
 open Funogram.Keyboard.Inline
+open DemoBot.Examples
 
 
 [<Literal>]
@@ -19,6 +20,7 @@ let processMessageBuild config =
 
     let defaultText = """⭐️Keyboard demo bot:
     /calendar - Calendar keyboard example
+    /flight - Reserve seats in Airbus example
     /choice - Choice keyboard example"""
 
 
@@ -38,12 +40,27 @@ let processMessageBuild config =
         let fromId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
                      else ctx.Update.CallbackQuery.Value.From.Id       
         let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId)) text (Some parseMode) None None None None) |> bot
+        let say s= sendMessageFormatted s ParseMode.Markdown
         let askForBirthday()=Calendar.show config fromId "When is your birthday?"
         let answeredBithday=Calendar.handleUpdate config
+        let askForSeats()=EmbraerE170Reservations.show config fromId "Please select your seats"
+        let selectedSeats=EmbraerE170Reservations.handleUpdate config
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> askForBirthday())
-                answeredBithday (fun date->sendMessageFormatted (date.ToLongDateString()) ParseMode.Markdown)
+                cmd "/flight"  (fun _ -> askForSeats())
+                answeredBithday (fun date->say (date.ToLongDateString()))
+                selectedSeats (fun seats->
+                                          let selected=match seats with
+                                                        |[]->"nothing"
+                                                        |_->
+                                                           seats
+                                                           |>List.map( fun (r,s)->sprintf "%d%c" r s)
+                                                           |>String.concat(";")
+
+                                          selected
+                                          |>sprintf "You've just reserved %s"
+                                          |>say)
             ]
         if notHandled then             
             bot (sendMessage fromId defaultText)           
