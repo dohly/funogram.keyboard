@@ -42,9 +42,9 @@ module Calendar=
                let Y=d.AddYears
                let M=d.AddMonths
                let kb=build(newKeyboard {
-                          yield! [B("<<<", Y(-10));   decade;  B(">>>", Y(+10))] // (<<<) (2010-2020) (>>>)
-                          yield! [B("<<",  Y(-1));    year;    B(">>",  Y(+1))]  // (<< ) (  2019   ) ( >>)
-                          yield! [B("<",   M(-1));    month;   B(">",   M(+1))]  // ( < ) ( Февраль ) ( > )
+                          yield! [B("<<<", Y(-10));   decade;  B(">>>", Y(+10))] // (<<<) ( 2010-2020 ) (>>>)
+                          yield! [B("<<",  Y(-1));    year;    B(">>",  Y(+1))]  // (<< ) (    2019   ) ( >>)
+                          yield! [B("<",   M(-1));    month;   B(">",   M(+1))]  // ( < ) (  February ) ( > )
                           let weeks=[1..(daysInMonth+diffStart+diffEnd)]|>List.groupBy(fun x->(x-1)/7)
                           for (_,days) in weeks do   
                              yield! days|>List.map(dayBtn)
