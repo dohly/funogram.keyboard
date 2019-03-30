@@ -7,6 +7,8 @@ open Funogram.Bot
 open Funogram.Types
 open FunHttp
 open System.Net.Http
+open Funogram.Keyboard
+open Funogram.Keyboard.Inline
 
 
 [<Literal>]
@@ -32,16 +34,19 @@ let processMessageBuild config =
 
     let botResult data = api config data |> Async.RunSynchronously
     let bot data = botResult data |> processResult
-
     let updateArrived ctx =
-        let fromId() = ctx.Update.Message.Value.From.Value.Id        
-        let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId())) text (Some parseMode) None None None None) |> bot
-
+        let fromId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
+                     else ctx.Update.CallbackQuery.Value.From.Id       
+        let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId)) text (Some parseMode) None None None None) |> bot
+        let askForBirthday()=Calendar.show config fromId "When is your birthday?"
+        let answeredBithday=Calendar.handleUpdate config
         let notHandled =
             processCommands ctx [
-                cmd "/calendar"  (fun _ -> sendMessageFormatted "Calendar Demo" ParseMode.Markdown)
+                cmd "/calendar"  (fun _ -> askForBirthday())
+                answeredBithday (fun date->sendMessageFormatted (date.ToLongDateString()) ParseMode.Markdown)
             ]
-        if notHandled then bot (sendMessage (fromId()) defaultText)
+        if notHandled then             
+            bot (sendMessage fromId defaultText)           
     updateArrived
 
 let start token =
