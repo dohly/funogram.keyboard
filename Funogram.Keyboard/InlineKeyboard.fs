@@ -27,6 +27,7 @@ module InlineKeyboard=
     member __.Delay(f)=f()
     member __.For(m,f) =m |> List.collect f
     member __.Bind(m,f) =m |> List.collect f
+    member __.Zero()=[]
  let newKeyboard=KeyboardBuilder()
  [<Literal>]
  let private IGNORE="IGNORE"
