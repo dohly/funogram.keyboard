@@ -20,7 +20,7 @@ let processMessageBuild config =
 
     let defaultText = """⭐️Keyboard demo bot:
     /calendar - Calendar keyboard example
-    /flight - Reserve seats in Airbus example
+    /flight - Reserve seats in Embraer E170 example
     /choice - Choice keyboard example"""
 
 
