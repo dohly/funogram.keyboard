@@ -8,6 +8,8 @@
     <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
     <PackageLicenseUrl>https://licenses.nuget.org/MIT</PackageLicenseUrl>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

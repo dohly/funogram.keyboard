@@ -1,26 +1,39 @@
 ﻿namespace Funogram.Keyboard.Inline
 
-[<AutoOpen>]
-module InlineKeyboard=
- open Funogram.Types
- open Funogram.RequestsTypes
- open Funogram 
- open Bot
- type Payload=string
- type KeyboardId=string
- type MessageText=string
- type StateToKeyboard<'a>='a->InlineKeyboardMarkup
- type StringToState<'a>=string->'a option
- type SendAnswer<'a>=RequestsTypes.IRequestBase<'a>->unit
- type HandleResult<'state>=
-            |Edited of EditMessageTextReq
-            |Empty of AnswerCallbackQueryReq
-            |Confirmed of 'state*DeleteMessageReq 
- type InlineBtn<'state>=
-      |ChangeState of string*'state
-      |Confirm of string*'state
+open Funogram.Types
+open Funogram
+module internal Constants=
+     [<Literal>]
+     let IGNORE="IGNORE"
+     [<Literal>]
+     let CONFIRM="CONFIRM"
+     [<Literal>]
+     let CHANGE_STATE="CHANGE_STATE"
+
+type InlineButtonDefinition<'TState>=
+      |ChangeState of string*'TState
+      |Confirm of string*'TState
       |Ignore of string
- type KeyboardBuilder()=
+
+type KeyboardBuilder<'TState>(kb:KeyboardDefinition<'TState>)=
+    let inlineBtn btnType text (payload:string) =     
+     {
+      Text = text
+      CallbackData = Some(sprintf "%s|%s|%s" kb.Id btnType payload)
+      Url = None
+      CallbackGame = None
+      SwitchInlineQuery = None
+      SwitchInlineQueryCurrentChat = None
+     }
+    let btn def=
+        let toBtn t label value=value|>kb.Serialize|>inlineBtn t label
+        match def with
+            |ChangeState (text, s)->s|>toBtn Constants.CHANGE_STATE text
+            |Confirm (text, s)->s|>toBtn Constants.CONFIRM text
+            |Ignore (text)->inlineBtn Constants.IGNORE text ""
+    member __.Change =ChangeState>>btn
+    member __.Ignore =Ignore>>btn
+    member __.Confirm=Confirm>>btn
     member __.YieldFrom(x:InlineKeyboardButton seq)= [x]
     member __.Yield(x:InlineKeyboardButton)= [[x]|>Seq.ofList]
     member __.Combine(a,b)=a@b
@@ -28,50 +41,63 @@ module InlineKeyboard=
     member __.For(m,f) =m |> List.collect f
     member __.Bind(m,f) =m |> List.collect f
     member __.Zero()=[]
- let newKeyboard=KeyboardBuilder()
+
+and KeyboardDefinition<'TState>={
+    Id:string
+    BotConfig:Api.BotConfig
+    GetMessageText:'TState->string
+    InitialState:'TState
+    GetKeysByState:KeyboardBuilder<'TState>->'TState->seq<InlineKeyboardButton> list
+    TryDeserialize:string->'TState option
+    Serialize:'TState->string
+    DoWhenConfirmed:'TState->unit
+    DisableNotification:bool
+    HideAfterConfirm:bool
+}
+
+ 
+
+[<AutoOpen>]
+module InlineKeyboard=
+ open Funogram.RequestsTypes
+ open Bot
  [<Literal>]
  let private IGNORE="IGNORE"
  [<Literal>]
  let private CONFIRM="CONFIRM"
  [<Literal>]
  let private CHANGE_STATE="CHANGE_STATE"
+ 
+ type private HandleResult<'state>=
+            |Edited of EditMessageTextReq
+            |Empty of AnswerCallbackQueryReq
+            |Confirmed of 'state*DeleteMessageReq
 
- let private btn (id:KeyboardId) btnType text (payload:Payload) =     
-     {
-      Text = text
-      CallbackData = Some(sprintf "%s|%s|%s" id btnType payload)
-      Url = None
-      CallbackGame = None
-      SwitchInlineQuery = None
-      SwitchInlineQueryCurrentChat = None
-     }
  let private bot config data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
     
- let buildButton keyboardId toString def =
-        let toBtn t label value=value|>toString|>btn keyboardId t label
-        match def with
-        |ChangeState (text, s)->s|>toBtn CHANGE_STATE text
-        |Confirm (text,s)->s|>toBtn CONFIRM text
-        |Ignore text->btn keyboardId IGNORE text ""
  
- let build buttons=      
+
+     
+ let private build buttons=      
      { InlineKeyboard =buttons }
 
- let show<'a> cfg (getKb:StateToKeyboard<'a>) text state notify toId= 
-        let kb=state|>getKb
-        let markup=kb|>Markup.InlineKeyboardMarkup
+ let show toId (kb:KeyboardDefinition<'a>) = 
+        let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
+        let markup=keys|>build|>Markup.InlineKeyboardMarkup
+        let text=kb.InitialState|>kb.GetMessageText
         let req=Api.sendMessageMarkup toId text markup
-        {req with DisableNotification=Some notify}
-        |>bot cfg
+        {req with DisableNotification=Some kb.DisableNotification}
+        |>bot kb.BotConfig
  
- let handleUpdate keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) text (q:CallbackQuery)=
+ let private handleCallback (kb:KeyboardDefinition<'a>) (q:CallbackQuery)=
         let extractTypePayload (parts:string[])=
-            if parts.[0]=keyboardId then Some (parts.[1], parts.[2])
+            if parts.[0]=kb.Id then Some (parts.[1], parts.[2])
             else None
         let skip()=(Api.answerCallbackQueryBase(Some(q.Id)) None None None None)
-        let delete()=Api.deleteMessage(q.Message.Value.Chat.Id)(q.Message.Value.MessageId)            
+        let delete()=Api.deleteMessage(q.Message.Value.Chat.Id)(q.Message.Value.MessageId)
         let edit newState=
-            let (kb)=newState|>getKb
+            let keys=newState|>kb.GetKeysByState (KeyboardBuilder(kb))
+            let text=newState|>kb.GetMessageText
             Api.editMessageTextBase
                      (Some(q.Message.Value.Chat.Id|>ChatId.Int)) 
                      (Some(q.Message.Value.MessageId))
@@ -79,19 +105,19 @@ module InlineKeyboard=
                      (text)
                      None
                      None
-                     (Some(kb))
+                     (Some(keys|>build))
              
         let switch=
             function
             |(IGNORE, _)->skip()|>Empty|>Some
             |(CHANGE_STATE, s)->
                 optional{
-                 let! newState=tryParse s
+                 let! newState=kb.TryDeserialize s
                  return newState|>edit|>Edited
                 }
             |(CONFIRM, s)->
                 optional{
-                 let! newState=tryParse s
+                 let! newState=kb.TryDeserialize s
                  return (newState,delete())|>Confirmed
                 }
             |_->None
@@ -102,16 +128,16 @@ module InlineKeyboard=
          return! switch typeAndPayload
         }  
  
- let tryHandleUpdate cfg confirmed keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) (ctx:UpdateContext)=
-    let r=optional{
+ let tryHandleUpdate (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
+    let r=optional{            
             let! q=ctx.Update.CallbackQuery
-            let! msg=q.Message
-            let! txt=msg.Text
-            return! handleUpdate keyboardId tryParse getKb txt q      
-            }|>Option.map(function
-                    |Empty resp->resp|>bot cfg
-                    |Edited resp->resp|>bot cfg
-                    |Confirmed (state,resp)->resp|>bot cfg 
-                                             state|>confirmed)
+            let! hr= handleCallback kb q      
+            return match hr with
+                    |Empty resp->resp|>bot kb.BotConfig
+                    |Edited resp->resp|>bot kb.BotConfig
+                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot kb.BotConfig
+                                             deleted|>ignore
+                                             state|>kb.DoWhenConfirmed
+           }
     r.IsNone
       

@@ -1,20 +1,14 @@
 ﻿namespace Funogram.Keyboard
 module Calendar=
-    open Funogram.Types
     open System
     open System.Globalization   
     open Funogram.Keyboard.Inline
-    open Funogram.Bot
-
     [<Literal>]
     let private CALENDAR="CALENDAR"
-    let private serialize (d:DateTime)=d.ToShortDateString()
-    let private btn=buildButton CALENDAR serialize
-    let private B=ChangeState>>btn    
-    let private X=Ignore>>btn
-    let private OK=Confirm>>btn
-    let private keyboard :StateToKeyboard<DateTime>=
-              fun d-> 
+    let private keyboard (keys:KeyboardBuilder<DateTime>) (d:DateTime)= 
+               let X=keys.Ignore
+               let B=keys.Change
+               let OK=keys.Confirm
                let daysInMonth=DateTime.DaysInMonth(d.Year, d.Month)
                let fdow = int CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek               
                let dow x=(int (new DateTime(d.Year, d.Month, x)).DayOfWeek)
@@ -41,7 +35,7 @@ module Calendar=
                let month=CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(d.Month)|>X
                let Y=d.AddYears
                let M=d.AddMonths
-               let kb=build(newKeyboard {
+               keys {
                           yield! [B("<<<", Y(-10));   decade;  B(">>>", Y(+10))] // (<<<) ( 2010-2020 ) (>>>)
                           yield! [B("<<",  Y(-1));    year;    B(">>",  Y(+1))]  // (<< ) (    2019   ) ( >>)
                           yield! [B("<",   M(-1));    month;   B(">",   M(+1))]  // ( < ) (  February ) ( > )
@@ -49,15 +43,20 @@ module Calendar=
                           for (_,days) in weeks do   
                              yield! days|>List.map(dayBtn)
                           yield OK(sprintf "OK (%s)" (d.ToShortDateString()), d)
-                        })
-               kb
+               }
     
-    let show cfg toId msg=
-        InlineKeyboard.show cfg keyboard msg DateTime.Now true toId
-
-    let handleUpdate cfg confirmed=
-            let tryParse (d:string)=
-                        match DateTime.TryParse d with
-                            |true, dt->dt|>Some
-                            |_->None
-            InlineKeyboard.tryHandleUpdate cfg confirmed CALENDAR tryParse keyboard
+    
+    let create botCfg text callback={
+        Id=CALENDAR
+        DisableNotification=false
+        HideAfterConfirm=true
+        InitialState=DateTime.Now
+        GetMessageText=fun _->text
+        BotConfig=botCfg
+        Serialize=fun d->d.ToShortDateString()
+        GetKeysByState=keyboard
+        TryDeserialize=fun d->match DateTime.TryParse d with
+                                |true, dt->dt|>Some
+                                |_->None
+        DoWhenConfirmed=callback
+    }
