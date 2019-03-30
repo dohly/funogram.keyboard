@@ -38,11 +38,12 @@ let processMessageBuild config =
         let fromId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
                      else ctx.Update.CallbackQuery.Value.From.Id       
         let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId)) text (Some parseMode) None None None None) |> bot
-        
+        let askForBirthday()=Calendar.show config fromId "When is your birthday?"
+        let answeredBithday=Calendar.handleUpdate config
         let notHandled =
             processCommands ctx [
-                cmd "/calendar"  (fun _ -> (Calendar.show fromId "Please select a date")|>bot)
-                Calendar.handleUpdate config (fun date->sendMessage fromId (date.ToLongDateString())|>bot)
+                cmd "/calendar"  (fun _ -> askForBirthday())
+                answeredBithday (fun date->sendMessageFormatted (date.ToLongDateString()) ParseMode.Markdown)
             ]
         if notHandled then             
             bot (sendMessage fromId defaultText)           

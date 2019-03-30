@@ -52,12 +52,12 @@ module Calendar=
                         })
                kb
     
-    let show toId msg=
-        InlineKeyboard.show keyboard msg DateTime.Now true toId
+    let show cfg toId msg=
+        InlineKeyboard.show cfg keyboard msg DateTime.Now true toId
 
-    let handleUpdate cfg confirmed (ctx:UpdateContext)=
+    let handleUpdate cfg confirmed=
             let tryParse (d:string)=
                         match DateTime.TryParse d with
                             |true, dt->dt|>Some
                             |_->None
-            ctx|>InlineKeyboard.tryHandleUpdate cfg confirmed CALENDAR tryParse keyboard
+            InlineKeyboard.tryHandleUpdate cfg confirmed CALENDAR tryParse keyboard

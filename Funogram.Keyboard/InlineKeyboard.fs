@@ -44,6 +44,8 @@ module InlineKeyboard=
       SwitchInlineQuery = None
       SwitchInlineQueryCurrentChat = None
      }
+ let private bot config data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
+    
  let buildButton keyboardId toString def =
         let toBtn t label value=value|>toString|>btn keyboardId t label
         match def with
@@ -54,11 +56,12 @@ module InlineKeyboard=
  let build buttons=      
      { InlineKeyboard =buttons }
 
- let show<'a> (getKb:StateToKeyboard<'a>) text state notify toId= 
+ let show<'a> cfg (getKb:StateToKeyboard<'a>) text state notify toId= 
         let kb=state|>getKb
         let markup=kb|>Markup.InlineKeyboardMarkup
         let req=Api.sendMessageMarkup toId text markup
         {req with DisableNotification=Some notify}
+        |>bot cfg
  
  let handleUpdate keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) text (q:CallbackQuery)=
         let extractTypePayload (parts:string[])=
@@ -98,17 +101,16 @@ module InlineKeyboard=
          return! switch typeAndPayload
         }  
  
- let tryHandleUpdate config confirmed keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) (ctx:UpdateContext)=
-    let bot data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
+ let tryHandleUpdate cfg confirmed keyboardId (tryParse:StringToState<'a>) (getKb:StateToKeyboard<'a>) (ctx:UpdateContext)=
     let r=optional{
             let! q=ctx.Update.CallbackQuery
             let! msg=q.Message
             let! txt=msg.Text
             return! handleUpdate keyboardId tryParse getKb txt q      
             }|>Option.map(function
-                    |Empty resp->resp|>bot
-                    |Edited resp->resp|>bot
-                    |Confirmed (state,resp)->resp|>bot  
+                    |Empty resp->resp|>bot cfg
+                    |Edited resp->resp|>bot cfg
+                    |Confirmed (state,resp)->resp|>bot cfg 
                                              state|>confirmed)
     r.IsNone
       
