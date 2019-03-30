@@ -8,11 +8,11 @@ module Calendar=
 
     [<Literal>]
     let private CALENDAR="CALENDAR"
-    let serialize (d:DateTime)=d.ToShortDateString()
-    let btn=buildButton CALENDAR serialize
-    let B=ChangeState>>btn    
-    let X=Ignore>>btn
-    let OK=Confirm>>btn
+    let private serialize (d:DateTime)=d.ToShortDateString()
+    let private btn=buildButton CALENDAR serialize
+    let private B=ChangeState>>btn    
+    let private X=Ignore>>btn
+    let private OK=Confirm>>btn
     let private keyboard :StateToKeyboard<DateTime>=
               fun d-> 
                let daysInMonth=DateTime.DaysInMonth(d.Year, d.Month)
