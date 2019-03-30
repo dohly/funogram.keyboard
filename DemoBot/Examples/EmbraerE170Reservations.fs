@@ -12,19 +12,29 @@ module EmbraerE170Reservations=
                 let row=int (s.Replace(letter.ToString(), ""))
                 (row,letter)
     [<Literal>]
-    let private E170="E170"
-    let private serialize (d:Seat list)=
-                    d
-                    |>List.map(seatToStr)
-                    |>String.concat ";"
+    let private E170="E170"   
+    
+    let create botCfg text callback :KeyboardDefinition<Seat list>={
+        Id=E170
+        DisableNotification=false
+        HideAfterConfirm=true
+        InitialState=[]
+        GetMessageText=fun _->text
+        BotConfig=botCfg
+        Serialize=List.map(seatToStr)>>String.concat ";"        
+        TryDeserialize=fun seats->
+                        try
+                            if seats.Length=0 then Some []
+                            else  seats.Split(';')|>Array.map(strToSeat)|>Array.toList|>Some
+                        with
+                        |_->None
+        DoWhenConfirmed=callback
+        GetKeysByState=
+            fun keys selectedSeats->
+               let X=keys.Ignore
+               let B=keys.Change
+               let OK=keys.Confirm
 
-
-    let private btn=buildButton E170 serialize
-    let private B=ChangeState>>btn    
-    let private X=Ignore>>btn
-    let private OK=Confirm>>btn
-    let private keyboard :StateToKeyboard<Seat list>=
-              fun selectedSeats-> 
                let seatsRow i=
                    List.map(fun s->(i,s))
                    >>List.map(fun s->
@@ -40,7 +50,7 @@ module EmbraerE170Reservations=
                let businessClassRow i=['A';' ';' ';'D';'F']|>seatsRow i
                let economyClassRow i= ['A';'C';' ';'D';'F']|>seatsRow i
 
-               let kb=build(newKeyboard {
+               build(keys {
                           for i in [1..2] do
                             yield! businessClassRow i
                           for i in [3..18] do
@@ -49,18 +59,5 @@ module EmbraerE170Reservations=
                           if any then yield OK("Ready", selectedSeats)
                           yield OK("Cancel",[])
                         })
-               kb
-    
-    let show cfg toId msg=
-        InlineKeyboard.show cfg keyboard msg [] true toId
-
-    let handleUpdate cfg confirmed=
-            let tryParse (seats:string)=
-                        try
-                            if seats.Length=0 then Some []
-                            else  seats.Split(';')|>Array.map(strToSeat)|>Array.toList|>Some
-                        with
-                        |_->None
-            InlineKeyboard.tryHandleUpdate cfg confirmed E170 tryParse keyboard
-    
-
+               
+    }
