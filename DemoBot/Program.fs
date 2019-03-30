@@ -21,7 +21,8 @@ let processMessageBuild config =
     let defaultText = """⭐️Keyboard demo bot:
     /calendar - Calendar keyboard example
     /flight - Reserve seats in Embraer E170 example
-    /confirm - Confirm keyboard example"""
+    /choice - Choice keyboard example"""
+
 
     let processResultWithValue (result: Result<'a, ApiResponseError>) =
         match result with
@@ -41,18 +42,14 @@ let processMessageBuild config =
         let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(fromId)) text (Some parseMode) None None None None) |> bot
         let say s= sendMessageFormatted s ParseMode.Markdown
         let askForBirthday()=Calendar.show config fromId "When is your birthday?"
-        let askForConfirm()=ConfirmKeyboard.show config fromId "Are you sure?"
         let answeredBithday=Calendar.handleUpdate config
         let askForSeats()=EmbraerE170Reservations.show config fromId "Please select your seats"
-        let answeredConfirm=ConfirmKeyboard.handleUpdate config
         let selectedSeats=EmbraerE170Reservations.handleUpdate config
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> askForBirthday())
-                cmd "/confirm"  (fun _ -> askForConfirm())
                 cmd "/flight"  (fun _ -> askForSeats())
                 answeredBithday (fun date->say (date.ToLongDateString()))
-                answeredConfirm (fun b->say (sprintf "You have just pressed %s" (match b with | true -> "yes" | false -> "no")))                
                 selectedSeats (fun seats->
                                           let selected=match seats with
                                                         |[]->"nothing"
