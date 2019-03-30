@@ -7,6 +7,8 @@
     <Description>Funogram extension to work with inline keyboards</Description>
     <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
