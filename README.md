@@ -6,4 +6,5 @@ Extension for [Funogram](https://github.com/Dolfik1/Funogram/) for working with 
 
 Project is in progress....
 
-![Calendar](calendar.gif)
+![Calendar](calendar.gif) ![Flight](flight.gif)
+
