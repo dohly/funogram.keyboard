@@ -7,6 +7,7 @@
     <Description>Funogram extension to work with inline keyboards</Description>
     <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
+    <PackageLicenseUrl>https://licenses.nuget.org/MIT</PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>
