@@ -50,7 +50,7 @@ module EmbraerE170Reservations=
                let businessClassRow i=['A';' ';' ';'D';'F']|>seatsRow i
                let economyClassRow i= ['A';'C';' ';'D';'F']|>seatsRow i
 
-               build(keys {
+               keys {
                           for i in [1..2] do
                             yield! businessClassRow i
                           for i in [3..18] do
@@ -58,6 +58,6 @@ module EmbraerE170Reservations=
                           let any=selectedSeats|>List.isEmpty|>not
                           if any then yield OK("Ready", selectedSeats)
                           yield OK("Cancel",[])
-                        })
+                   }
                
     }

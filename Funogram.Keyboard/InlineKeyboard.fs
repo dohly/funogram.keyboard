@@ -47,7 +47,7 @@ and KeyboardDefinition<'TState>={
     BotConfig:Api.BotConfig
     GetMessageText:'TState->string
     InitialState:'TState
-    GetKeysByState:KeyboardBuilder<'TState>->'TState->InlineKeyboardMarkup
+    GetKeysByState:KeyboardBuilder<'TState>->'TState->seq<InlineKeyboardButton> list
     TryDeserialize:string->'TState option
     Serialize:'TState->string
     DoWhenConfirmed:'TState->unit
@@ -78,12 +78,12 @@ module InlineKeyboard=
  
 
      
- let build buttons=      
+ let private build buttons=      
      { InlineKeyboard =buttons }
 
  let show toId (kb:KeyboardDefinition<'a>) = 
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
-        let markup=keys|>Markup.InlineKeyboardMarkup
+        let markup=keys|>build|>Markup.InlineKeyboardMarkup
         let text=kb.InitialState|>kb.GetMessageText
         let req=Api.sendMessageMarkup toId text markup
         {req with DisableNotification=Some kb.DisableNotification}
@@ -105,7 +105,7 @@ module InlineKeyboard=
                      (text)
                      None
                      None
-                     (Some(keys))
+                     (Some(keys|>build))
              
         let switch=
             function

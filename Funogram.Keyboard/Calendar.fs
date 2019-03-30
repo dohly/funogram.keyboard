@@ -35,7 +35,7 @@ module Calendar=
                let month=CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(d.Month)|>X
                let Y=d.AddYears
                let M=d.AddMonths
-               build(keys {
+               keys {
                           yield! [B("<<<", Y(-10));   decade;  B(">>>", Y(+10))] // (<<<) ( 2010-2020 ) (>>>)
                           yield! [B("<<",  Y(-1));    year;    B(">>",  Y(+1))]  // (<< ) (    2019   ) ( >>)
                           yield! [B("<",   M(-1));    month;   B(">",   M(+1))]  // ( < ) (  February ) ( > )
@@ -43,7 +43,7 @@ module Calendar=
                           for (_,days) in weeks do   
                              yield! days|>List.map(dayBtn)
                           yield OK(sprintf "OK (%s)" (d.ToShortDateString()), d)
-               })
+               }
     
     
     let create botCfg text callback={
