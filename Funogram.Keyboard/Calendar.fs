@@ -1,8 +1,10 @@
 ﻿namespace Funogram.Keyboard
 module Calendar=
+    open Funogram.Types
     open System
     open System.Globalization   
     open Funogram.Keyboard.Inline
+    open Funogram.Bot
 
     [<Literal>]
     let private CALENDAR="CALENDAR"
