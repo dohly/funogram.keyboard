@@ -3,3 +3,7 @@
 
 
 Extension for [Funogram](https://github.com/Dolfik1/Funogram/) for working with telegram inline keyboards.
+
+Project is in progress....
+
+![Calendar](calendar.gif)
