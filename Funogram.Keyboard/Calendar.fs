@@ -46,13 +46,12 @@ module Calendar=
                }
     
     
-    let create botCfg text callback={
+    let create text callback={
         Id=CALENDAR
         DisableNotification=false
         HideAfterConfirm=true
         InitialState=DateTime.Now
         GetMessageText=fun _->text
-        BotConfig=botCfg
         Serialize=fun d->d.ToShortDateString()
         GetKeysByState=keyboard
         TryDeserialize=fun d->match DateTime.TryParse d with

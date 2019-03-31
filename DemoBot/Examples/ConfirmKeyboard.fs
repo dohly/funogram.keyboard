@@ -9,7 +9,6 @@ module ConfirmKeyboard=
         HideAfterConfirm=true
         InitialState=false
         GetMessageText=fun _->text
-        BotConfig=botCfg
         Serialize=fun d-> d |> Convert.ToString
         GetKeysByState = fun keys selected->
                                 let OK=keys.Confirm               
