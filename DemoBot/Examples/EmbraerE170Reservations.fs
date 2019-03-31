@@ -24,7 +24,6 @@ module EmbraerE170Reservations=
         HideAfterConfirm=true
         InitialState=[]
         GetMessageText=fun _->text
-        BotConfig=botCfg
         Serialize=List.map(seatToStr)>>String.concat ";"        
         TryDeserialize=fun seats->
                         try

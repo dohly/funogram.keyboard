@@ -82,7 +82,7 @@ module InlineKeyboard=
  let private build buttons=      
      { InlineKeyboard =buttons }
 
- let show toId (kb:KeyboardDefinition<'a>) (bot:IRequestBase<'b>->unit)= 
+ let show (bot:IBotRequest->unit) toId (kb:KeyboardDefinition<'a>) = 
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
         let markup=keys|>build|>Markup.InlineKeyboardMarkup
         let text=kb.InitialState|>kb.GetMessageText
@@ -129,7 +129,7 @@ module InlineKeyboard=
          return! switch typeAndPayload
         }  
  
- let tryHandleUpdate (kb:KeyboardDefinition<'a>) (bot:IRequestBase<'b>->unit) (ctx:UpdateContext)=
+ let tryHandleUpdate (bot:IBotRequest->unit) (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
     let r=optional{            
             let! q=ctx.Update.CallbackQuery
             let! hr= handleCallback kb q      
