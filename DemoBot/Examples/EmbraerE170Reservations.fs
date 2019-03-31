@@ -17,7 +17,8 @@ module EmbraerE170Reservations=
     [<Literal>]
     let private E170="E170"   
     
-    let create botCfg text callback :KeyboardDefinition<Seat list>={
+    let create botCfg text callback (reservedBySomeoneElse:Seat list)
+        :KeyboardDefinition<Seat list>={
         Id=E170
         DisableNotification=false
         HideAfterConfirm=true
@@ -37,18 +38,22 @@ module EmbraerE170Reservations=
                let X=keys.Ignore
                let B=keys.Change
                let OK=keys.Confirm
-
+               let canBeReserved s=
+                 let alreadySelected=List.contains s selectedSeats
+                 let mutable text=seatToStr s
+                 if (alreadySelected) then text<-sprintf ">%s<" text
+                 let newState=if alreadySelected then List.filter(fun x->x<>s) selectedSeats
+                                                 else s::selectedSeats
+                 B(text, newState)
+               let busy=X("X")
+               let isSeatAlreadyReserved s=reservedBySomeoneElse|>List.contains(s)
                let seatsRow i=
                    List.map(fun s->(i,s))
                    >>List.map(fun s->
                                     match s with
                                     |(_,' ')->X(" ")
-                                    |_->let alreadySelected=List.contains s selectedSeats
-                                        let mutable text=seatToStr s
-                                        if (alreadySelected) then text<-sprintf ">%s<" text
-                                        let newState=if alreadySelected then List.filter(fun x->x<>s) selectedSeats
-                                                     else s::selectedSeats
-                                        B(text, newState)
+                                    |_->if isSeatAlreadyReserved(s) then busy
+                                        else canBeReserved(s)
                             )
                let businessClassRow i=['A';' ';' ';'D';'F']|>seatsRow i
                let economyClassRow i= ['A';'C';' ';'D';'F']|>seatsRow i
