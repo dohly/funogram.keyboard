@@ -10,6 +10,7 @@ open System.Net.Http
 open Funogram.Keyboard
 open Funogram.Keyboard.Inline
 open DemoBot.Examples
+open Funogram.Keyboard
 
 
 [<Literal>]
@@ -21,7 +22,7 @@ let processMessageBuild config =
     let defaultText = """⭐️Keyboard demo bot:
     /calendar - Calendar keyboard example
     /flight - Reserve seats in Embraer E170 example
-    /choice - Choice keyboard example"""
+    /confirm - Confirm keyboard example"""
 
 
     let processResultWithValue (result: Result<'a, ApiResponseError>) =
@@ -59,13 +60,19 @@ let processMessageBuild config =
                                           |>sprintf "You've just reserved %s"
                                           |>say)
                         [(5,'A');(4,'C')]
+        let confirmKeyboard = ConfirmKeyboard.create config "Are you sure?"
+                                  (fun answer -> match answer with
+                                                    | true -> say ("You have just pressed yes")
+                                                    | false -> say ("You have just pressed no"))
                         
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> InlineKeyboard.show userId calendar)
                 cmd "/flight"  (fun _ -> InlineKeyboard.show userId seats)
+                cmd "/confirm"  (fun _ -> InlineKeyboard.show userId confirmKeyboard)
                 InlineKeyboard.tryHandleUpdate calendar
                 InlineKeyboard.tryHandleUpdate seats
+                InlineKeyboard.tryHandleUpdate confirmKeyboard
             ]
         if notHandled then             
             bot (sendMessage userId defaultText)           
