@@ -2,6 +2,8 @@
 
 open Funogram.Types
 open Funogram
+open Funogram.RequestsTypes
+
 module internal Constants=
      [<Literal>]
      let IGNORE="IGNORE"
@@ -44,7 +46,6 @@ type KeyboardBuilder<'TState>(kb:KeyboardDefinition<'TState>)=
 
 and KeyboardDefinition<'TState>={
     Id:string
-    BotConfig:Api.BotConfig
     GetMessageText:'TState->string
     InitialState:'TState
     GetKeysByState:KeyboardBuilder<'TState>->'TState->seq<InlineKeyboardButton> list
@@ -73,7 +74,7 @@ module InlineKeyboard=
             |Empty of AnswerCallbackQueryReq
             |Confirmed of 'state*DeleteMessageReq
 
- let private bot config data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
+ //let private bot config data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
     
  
 
@@ -81,13 +82,13 @@ module InlineKeyboard=
  let private build buttons=      
      { InlineKeyboard =buttons }
 
- let show toId (kb:KeyboardDefinition<'a>) = 
+ let show toId (kb:KeyboardDefinition<'a>) (bot:IRequestBase<'b>->unit)= 
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
         let markup=keys|>build|>Markup.InlineKeyboardMarkup
         let text=kb.InitialState|>kb.GetMessageText
         let req=Api.sendMessageMarkup toId text markup
         {req with DisableNotification=Some kb.DisableNotification}
-        |>bot kb.BotConfig
+        |>bot|>ignore
  
  let private handleCallback (kb:KeyboardDefinition<'a>) (q:CallbackQuery)=
         let extractTypePayload (parts:string[])=
@@ -128,14 +129,14 @@ module InlineKeyboard=
          return! switch typeAndPayload
         }  
  
- let tryHandleUpdate (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
+ let tryHandleUpdate (kb:KeyboardDefinition<'a>) (bot:IRequestBase<'b>->unit) (ctx:UpdateContext)=
     let r=optional{            
             let! q=ctx.Update.CallbackQuery
             let! hr= handleCallback kb q      
             return match hr with
-                    |Empty resp->resp|>bot kb.BotConfig
-                    |Edited resp->resp|>bot kb.BotConfig
-                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot kb.BotConfig
+                    |Empty resp->resp|>bot|>ignore
+                    |Edited resp->resp|>bot|>ignore
+                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot
                                              deleted|>ignore
                                              state|>kb.DoWhenConfirmed
            }
