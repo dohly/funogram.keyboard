@@ -35,14 +35,16 @@ let processMessageBuild config =
     let processResult (result: Result<'a, ApiResponseError>) =
         processResultWithValue result |> ignore
 
-    let botResult data = api config data |> Async.RunSynchronously
+    let botResult data = apiUntyped config data |> Async.RunSynchronously
     let bot data = botResult data |> processResult
     let updateArrived ctx =
         let userId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
                      else ctx.Update.CallbackQuery.Value.From.Id       
         let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(userId)) text (Some parseMode) None None None None) |> bot
         let say s= sendMessageFormatted s ParseMode.Markdown
-        let calendar=Calendar.create config 
+        let showKeyboard def=InlineKeyboard.show bot userId def
+        let tryHandleKeyboard def=InlineKeyboard.tryHandleUpdate bot def
+        let calendar=Calendar.create  
                         "When is your birthday?" 
                         (fun date->say (date.ToLongDateString()))
         let seats=EmbraerE170Reservations.create 
@@ -67,12 +69,12 @@ let processMessageBuild config =
                         
         let notHandled =
             processCommands ctx [
-                cmd "/calendar"  (fun _ -> InlineKeyboard.show userId calendar)
-                cmd "/flight"  (fun _ -> InlineKeyboard.show userId seats)
-                cmd "/confirm"  (fun _ -> InlineKeyboard.show userId confirmKeyboard)
-                InlineKeyboard.tryHandleUpdate calendar
-                InlineKeyboard.tryHandleUpdate seats
-                InlineKeyboard.tryHandleUpdate confirmKeyboard
+                cmd "/calendar"  (fun _ -> showKeyboard calendar)
+                cmd "/flight"  (fun _ -> showKeyboard seats)
+                cmd "/confirm"  (fun _ -> showKeyboard confirmKeyboard)
+                tryHandleKeyboard calendar
+                tryHandleKeyboard seats
+                tryHandleKeyboard confirmKeyboard
             ]
         if notHandled then             
             bot (sendMessage userId defaultText)           
