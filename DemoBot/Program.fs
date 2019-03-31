@@ -60,7 +60,7 @@ let processMessageBuild config =
                                           |>sprintf "You've just reserved %s"
                                           |>say)
                         [(5,'A');(4,'C')]
-        let confirmKeyboard = ConfirmKeyborad.create config "Are you sure?"
+        let confirmKeyboard = ConfirmKeyboard.create config "Are you sure?"
                                   (fun answer -> match answer with
                                                     | true -> say ("You have just pressed yes")
                                                     | false -> say ("You have just pressed no"))

@@ -1,5 +1,5 @@
-namespace Funogram.Keyboard
-module ConfirmKeyborad=
+namespace DemoBot.Examples
+module ConfirmKeyboard=
     open System
     open Funogram.Keyboard.Inline
     
