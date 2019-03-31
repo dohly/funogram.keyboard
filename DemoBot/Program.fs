@@ -44,10 +44,11 @@ let processMessageBuild config =
         let say s= sendMessageFormatted s ParseMode.Markdown
         let showKeyboard def=InlineKeyboard.show bot userId def
         let tryHandleKeyboard def=InlineKeyboard.tryHandleUpdate bot def
+        
         let calendar=Calendar.create  
                         "When is your birthday?" 
                         (fun date->say (date.ToLongDateString()))
-        let seats=EmbraerE170Reservations.create 
+        let seats()=EmbraerE170Reservations.create 
                         config 
                         "Please select your seats"
                         (fun seats->
@@ -61,7 +62,7 @@ let processMessageBuild config =
                                           selected
                                           |>sprintf "You've just reserved %s"
                                           |>say)
-                        [(5,'A');(4,'C')]
+                        DB.getReservationsDB
         let confirmKeyboard = ConfirmKeyboard.create config "Are you sure?"
                                   (fun answer -> match answer with
                                                     | true -> say ("You have just pressed yes")
@@ -70,10 +71,10 @@ let processMessageBuild config =
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> showKeyboard calendar)
-                cmd "/flight"  (fun _ -> showKeyboard seats)
+                cmd "/flight"  (fun _ -> seats()|>showKeyboard)
                 cmd "/confirm"  (fun _ -> showKeyboard confirmKeyboard)
                 tryHandleKeyboard calendar
-                tryHandleKeyboard seats
+                seats()|>tryHandleKeyboard 
                 tryHandleKeyboard confirmKeyboard
             ]
         if notHandled then             

@@ -1,6 +1,15 @@
 ﻿namespace DemoBot.Examples
 
 [<RequireQualifiedAccess>]
+module DB=
+    let mutable private callCounter=0
+    let mutable private reservationsTable=[(5,'D')]
+    let getReservationsDB()=
+                    callCounter<-callCounter+1
+                    reservationsTable<-(callCounter,'A')::reservationsTable
+                    reservationsTable
+
+[<RequireQualifiedAccess>]
 module EmbraerE170Reservations=
     open Funogram.Keyboard.Inline
     open System.Text.RegularExpressions
@@ -14,10 +23,11 @@ module EmbraerE170Reservations=
                 let letter=m.Groups.["Letter"].Value.[0]
                 let row=m.Groups.["Row"].Value |> int
                 (row,letter)
+
     [<Literal>]
     let private E170="E170"   
     
-    let create botCfg text callback (reservedBySomeoneElse:Seat list)
+    let create botCfg text callback (getReserved:unit->Seat list)
         :KeyboardDefinition<Seat list>={
         Id=E170
         DisableNotification=false
@@ -34,6 +44,7 @@ module EmbraerE170Reservations=
         DoWhenConfirmed=callback
         GetKeysByState=
             fun keys selectedSeats->
+               let reservedBySomeoneElse=getReserved()
                let X=keys.Ignore
                let B=keys.Change
                let OK=keys.Confirm
