@@ -3,13 +3,16 @@
 [<RequireQualifiedAccess>]
 module EmbraerE170Reservations=
     open Funogram.Keyboard.Inline
+    open System.Text.RegularExpressions
+
     type Seat=(int*char)
     let private seatToStr x=              
                         let (r,s)=x
                         sprintf "%d%c" r s
     let private strToSeat (s:string)=
-                let letter=s|>Seq.rev|>Seq.toList|>List.head
-                let row=int (s.Replace(letter.ToString(), ""))
+                let m=Regex("(?<Row>\d+)(?<Letter>.)").Match(s)
+                let letter=m.Groups.["Letter"].Value.[0]
+                let row=m.Groups.["Row"].Value |> int
                 (row,letter)
     [<Literal>]
     let private E170="E170"   
