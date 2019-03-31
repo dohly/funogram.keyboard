@@ -58,6 +58,8 @@ let processMessageBuild config =
                                           selected
                                           |>sprintf "You've just reserved %s"
                                           |>say)
+                        [(5,'A');(4,'C')]
+                        
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> InlineKeyboard.show userId calendar)
