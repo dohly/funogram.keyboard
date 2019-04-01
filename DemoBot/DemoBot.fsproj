@@ -14,8 +14,11 @@
   <ItemGroup>
     <PackageReference Include="FunHttp" Version="1.0.0" />
     <PackageReference Include="Funogram" Version="1.3.0" />
-    <PackageReference Include="Funogram.Keyboard" Version="1.2.0" />
-    <PackageReference Include="Funogram.Keyboard.Calendar" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Funogram.Keyboard.Calendar\Funogram.Keyboard.Calendar.fsproj" />
+    <ProjectReference Include="..\Funogram.Keyboard\Funogram.Keyboard.fsproj" />
   </ItemGroup>
 
 </Project>

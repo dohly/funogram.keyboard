@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Funogram.Keyboard" Version="1.2.0" />
+    <ProjectReference Include="..\Funogram.Keyboard\Funogram.Keyboard.fsproj" />
   </ItemGroup>
 
 </Project>

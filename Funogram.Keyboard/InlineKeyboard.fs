@@ -51,7 +51,7 @@ and KeyboardDefinition<'TState>={
     GetKeysByState:KeyboardBuilder<'TState>->'TState->seq<InlineKeyboardButton> list
     TryDeserialize:string->'TState option
     Serialize:'TState->string
-    DoWhenConfirmed:'TState->unit
+    DoWhenConfirmed: string*'TState->unit
     DisableNotification:bool
     HideAfterConfirm:bool
 }
@@ -68,7 +68,9 @@ module InlineKeyboard=
  let private CONFIRM="CONFIRM"
  [<Literal>]
  let private CHANGE_STATE="CHANGE_STATE"
- 
+ let mutable private keyboardHandlers:(UpdateContext->bool) list=[]
+ let getRegisteredHandlers()=keyboardHandlers
+
  type private HandleResult<'state>=
             |Edited of EditMessageTextReq
             |Empty of AnswerCallbackQueryReq
@@ -82,14 +84,6 @@ module InlineKeyboard=
  let private build buttons=      
      { InlineKeyboard =buttons }
 
- let show (bot:IBotRequest->unit) toId (kb:KeyboardDefinition<'a>) = 
-        let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
-        let markup=keys|>build|>Markup.InlineKeyboardMarkup
-        let text=kb.InitialState|>kb.GetMessageText
-        let req=Api.sendMessageMarkup toId text markup
-        {req with DisableNotification=Some kb.DisableNotification}
-        |>bot|>ignore
- 
  let private handleCallback (kb:KeyboardDefinition<'a>) (q:CallbackQuery)=
         let extractTypePayload (parts:string[])=
             if parts.[0]=kb.Id then Some (parts.[1], parts.[2])
@@ -129,7 +123,7 @@ module InlineKeyboard=
          return! switch typeAndPayload
         }  
  
- let tryHandleUpdate (bot:IBotRequest->unit) (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
+ let private tryHandleUpdate (bot:IBotRequest->unit) (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
     let r=optional{            
             let! q=ctx.Update.CallbackQuery
             let! hr= handleCallback kb q      
@@ -138,7 +132,15 @@ module InlineKeyboard=
                     |Edited resp->resp|>bot|>ignore
                     |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot
                                              deleted|>ignore
-                                             state|>kb.DoWhenConfirmed
+                                             (kb.Id,state)|>kb.DoWhenConfirmed
            }
     r.IsNone
-      
+ let show (bot:IBotRequest->unit) toId (kb:KeyboardDefinition<'a>) =
+        let handler=tryHandleUpdate bot kb
+        keyboardHandlers<-handler::keyboardHandlers
+        let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
+        let markup=keys|>build|>Markup.InlineKeyboardMarkup
+        let text=kb.InitialState|>kb.GetMessageText
+        let req=Api.sendMessageMarkup toId text markup
+        {req with DisableNotification=Some kb.DisableNotification}
+        |>bot|>ignore
