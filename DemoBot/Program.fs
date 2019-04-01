@@ -50,7 +50,8 @@ let processMessageBuild config =
                         (fun date->say (date.ToLongDateString()))
         let seats()=EmbraerE170Reservations.create 
                         config 
-                        "Please select your seats"
+                        "Please select up to 4 seats"
+                        4
                         (fun seats->
                                           let selected=match seats with
                                                         |[]->"nothing"
