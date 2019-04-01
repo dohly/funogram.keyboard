@@ -3,14 +3,14 @@ module ConfirmKeyboard=
     open System
     open Funogram.Keyboard.Inline
     
-    let create botCfg text callback={
+    let create text callback={
         Id="CONFIRM"
         DisableNotification=false
         HideAfterConfirm=true
         InitialState=false
         GetMessageText=fun _->text
         Serialize=fun d-> d |> Convert.ToString
-        GetKeysByState = fun keys selected->
+        GetKeysByState = fun keys _->
                                 let OK=keys.Confirm               
                                 keys {
                                   yield! [OK("Yes", true);   OK("No", false)] // (Yes) (No)
