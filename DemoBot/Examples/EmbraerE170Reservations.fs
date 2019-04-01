@@ -27,7 +27,7 @@ module EmbraerE170Reservations=
     [<Literal>]
     let private E170="E170"   
     
-    let create botCfg text limit callback (getReserved:unit->Seat list)
+    let create text limit callback (getReserved:unit->Seat list)
         :KeyboardDefinition<Seat list>={
         Id=E170
         DisableNotification=false

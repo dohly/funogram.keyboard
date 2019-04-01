@@ -49,7 +49,6 @@ let processMessageBuild config =
                         "When is your birthday?" 
                         (fun date->say (date.ToLongDateString()))
         let seats=EmbraerE170Reservations.create 
-                        config 
                         "Please select up to 4 seats"
                         4
                         (fun seats->
