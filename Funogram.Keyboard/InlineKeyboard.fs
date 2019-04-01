@@ -62,14 +62,16 @@ and KeyboardDefinition<'TState>={
 module InlineKeyboard=
  open Funogram.RequestsTypes
  open Bot
+ open System.Collections.Concurrent
+
  [<Literal>]
  let private IGNORE="IGNORE"
  [<Literal>]
  let private CONFIRM="CONFIRM"
  [<Literal>]
  let private CHANGE_STATE="CHANGE_STATE"
- let mutable private keyboardHandlers:(UpdateContext->bool) list=[]
- let getRegisteredHandlers()=keyboardHandlers
+ let private keyboardHandlers=ConcurrentDictionary<string,(UpdateContext->bool)>()
+ let getRegisteredHandlers()=keyboardHandlers.Values|>Seq.toList
 
  type private HandleResult<'state>=
             |Edited of EditMessageTextReq
@@ -113,6 +115,7 @@ module InlineKeyboard=
             |(CONFIRM, s)->
                 optional{
                  let! newState=kb.TryDeserialize s
+                 keyboardHandlers.TryRemove(kb.Id)|>ignore
                  return (newState,delete())|>Confirmed
                 }
             |_->None
@@ -136,8 +139,7 @@ module InlineKeyboard=
            }
     r.IsNone
  let show (bot:IBotRequest->unit) toId (kb:KeyboardDefinition<'a>) =
-        let handler=tryHandleUpdate bot kb
-        keyboardHandlers<-handler::keyboardHandlers
+        keyboardHandlers.[kb.Id]<-tryHandleUpdate bot kb
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
         let markup=keys|>build|>Markup.InlineKeyboardMarkup
         let text=kb.InitialState|>kb.GetMessageText
