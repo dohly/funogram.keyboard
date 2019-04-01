@@ -27,7 +27,7 @@ module EmbraerE170Reservations=
     [<Literal>]
     let private E170="E170"   
     
-    let create botCfg text callback (getReserved:unit->Seat list)
+    let create botCfg text limit callback (getReserved:unit->Seat list)
         :KeyboardDefinition<Seat list>={
         Id=E170
         DisableNotification=false
@@ -53,7 +53,7 @@ module EmbraerE170Reservations=
                  let mutable text=seatToStr s
                  if (alreadySelected) then text<-sprintf ">%s<" text
                  let newState=if alreadySelected then List.filter(fun x->x<>s) selectedSeats
-                                                 else s::selectedSeats
+                                                 else s::selectedSeats|>List.truncate(limit)
                  B(text, newState)
                let busy=X("X")
                let isSeatAlreadyReserved s=reservedBySomeoneElse|>List.contains(s)

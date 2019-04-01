@@ -4,7 +4,11 @@
 
 Extension for [Funogram](https://github.com/Dolfik1/Funogram/) for working with telegram inline keyboards.
 
-Nuget Funogram.Keyboard package is [here](https://www.nuget.org/packages/Funogram.Keyboard)
+Build your own keyboard using [Funogram.Keyboard](https://www.nuget.org/packages/Funogram.Keyboard)
 
-![Calendar](calendar.gif) ![Flight](flight.gif)
+![Flight](flight.gif)
+
+Or use existing keyboard, for example [Funogram.Keyboard.Calendar](https://www.nuget.org/packages/Funogram.Keyboard.Calendar)
+
+![Calendar](calendar.gif) 
 
