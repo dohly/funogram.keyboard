@@ -16,7 +16,6 @@
   <ItemGroup>
     <Compile Include="Optional.fs" />
     <Compile Include="InlineKeyboard.fs" />
-    <Compile Include="Calendar.fs" />
   </ItemGroup>
 
   <ItemGroup>
