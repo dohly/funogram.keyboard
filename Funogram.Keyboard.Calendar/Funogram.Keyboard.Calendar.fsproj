@@ -8,4 +8,8 @@
     <Compile Include="Calendar.fs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Funogram.Keyboard\Funogram.Keyboard.fsproj" />
+  </ItemGroup>
+
 </Project>
