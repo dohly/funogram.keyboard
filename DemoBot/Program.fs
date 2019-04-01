@@ -48,7 +48,7 @@ let processMessageBuild config =
         let calendar=Calendar.create  
                         "When is your birthday?" 
                         (fun date->say (date.ToLongDateString()))
-        let seats()=EmbraerE170Reservations.create 
+        let seats=EmbraerE170Reservations.create 
                         config 
                         "Please select up to 4 seats"
                         4
@@ -64,7 +64,7 @@ let processMessageBuild config =
                                           |>sprintf "You've just reserved %s"
                                           |>say)
                         DB.getReservationsDB
-        let confirmKeyboard = ConfirmKeyboard.create config "Are you sure?"
+        let confirmKeyboard = ConfirmKeyboard.create "Are you sure?"
                                   (fun answer -> match answer with
                                                     | true -> say ("You have just pressed yes")
                                                     | false -> say ("You have just pressed no"))
@@ -72,10 +72,10 @@ let processMessageBuild config =
         let notHandled =
             processCommands ctx [
                 cmd "/calendar"  (fun _ -> showKeyboard calendar)
-                cmd "/flight"  (fun _ -> seats()|>showKeyboard)
+                cmd "/flight"  (fun _ -> showKeyboard seats)
                 cmd "/confirm"  (fun _ -> showKeyboard confirmKeyboard)
                 tryHandleKeyboard calendar
-                seats()|>tryHandleKeyboard 
+                tryHandleKeyboard seats
                 tryHandleKeyboard confirmKeyboard
             ]
         if notHandled then             
