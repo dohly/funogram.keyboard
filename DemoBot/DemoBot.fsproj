@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Funogram.Keyboard.Calendar\Funogram.Keyboard.Calendar.fsproj" />
     <ProjectReference Include="..\Funogram.Keyboard\Funogram.Keyboard.fsproj" />
   </ItemGroup>
 
