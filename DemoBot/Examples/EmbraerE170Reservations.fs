@@ -2,17 +2,22 @@
 
 [<RequireQualifiedAccess>]
 module DB=
-    let mutable private callCounter=0
-    let mutable private reservationsTable=[(5,'D')]
-    let getReservationsDB()=
-                    callCounter<-callCounter+1
-                    reservationsTable<-(callCounter,'A')::reservationsTable
-                    reservationsTable
+    open System
+    let fligts=Array.init 3 (fun _-> Guid.NewGuid())   
+    let reserve c =List.map(fun x->(x,c))
+    let reservationsTable=dict [
+                (fligts.[0], reserve 'D' [3..2..13])
+                (fligts.[1], reserve 'A' [1..2..10])
+                (fligts.[2], reserve 'F' [2..2..15])            
+             ]    
 
 [<RequireQualifiedAccess>]
 module EmbraerE170Reservations=
     open Funogram.Keyboard.Inline
     open System.Text.RegularExpressions
+    open System
+    open Newtonsoft.Json
+    open System.Collections.Concurrent
 
     type Seat=(int*char)
     let private seatToStr x=              
@@ -23,13 +28,11 @@ module EmbraerE170Reservations=
                 let letter=m.Groups.["Letter"].Value.[0]
                 let row=m.Groups.["Row"].Value |> int
                 (row,letter)
-
-    [<Literal>]
-    let private E170="E170"   
     
-    let create text limit callback (getReserved:unit->Seat list)
+    
+    let create flightId text limit callback (getReserved:Guid->Seat list)
         :KeyboardDefinition<Seat list>={
-        Id=E170
+        Id=flightId.ToString()
         DisableNotification=false
         HideAfterConfirm=true
         InitialState=[]
@@ -44,7 +47,7 @@ module EmbraerE170Reservations=
         DoWhenConfirmed=callback
         GetKeysByState=
             fun keys selectedSeats->
-               let reservedBySomeoneElse=getReserved()
+               let reservedBySomeoneElse=getReserved(flightId)
                let X=keys.Ignore
                let B=keys.Change
                let OK=keys.Confirm
