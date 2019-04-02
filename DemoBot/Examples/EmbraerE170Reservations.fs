@@ -3,7 +3,7 @@
 [<RequireQualifiedAccess>]
 module DB=
     open System
-    let fligts=Array.init 3 (fun _-> Guid.NewGuid())   
+    let fligts=[|"SVO-GDX";"GRV-IJK";"IAA-IKT"|]  
     let reserve c =List.map(fun x->(x,c))
     let reservationsTable=dict [
                 (fligts.[0], reserve 'D' [3..2..13])
@@ -15,9 +15,6 @@ module DB=
 module EmbraerE170Reservations=
     open Funogram.Keyboard.Inline
     open System.Text.RegularExpressions
-    open System
-    open Newtonsoft.Json
-    open System.Collections.Concurrent
 
     type Seat=(int*char)
     let private seatToStr x=              
@@ -30,9 +27,9 @@ module EmbraerE170Reservations=
                 (row,letter)
     
     
-    let create flightId text limit callback (getReserved:Guid->Seat list)
+    let create flightId text limit callback getReserved
         :KeyboardDefinition<Seat list>={
-        Id=flightId.ToString()
+        Id=flightId
         DisableNotification=false
         HideAfterConfirm=true
         InitialState=[]
