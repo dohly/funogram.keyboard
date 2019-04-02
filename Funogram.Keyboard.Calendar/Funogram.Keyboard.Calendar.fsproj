@@ -3,12 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>Ivan Marinin</Authors>
     <Description>Calendar inline keyboard for Funogram</Description>
     <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
     <PackageLicenseUrl>https://licenses.nuget.org/MIT</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Funogram.Keyboard\Funogram.Keyboard.fsproj" />
+    <PackageReference Include="Funogram.Keyboard" Version="1.3.0" />
   </ItemGroup>
 
 </Project>
