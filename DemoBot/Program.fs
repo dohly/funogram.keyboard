@@ -54,15 +54,15 @@ let processMessageBuild config =
                         flightId
                         (sprintf "Please select up to 4 seats for flight %A" flightId)
                         4
-                        (fun (flightId, r)->
-                                let selected=match r with
+                        (fun (id, selectedSeats)->
+                                let selected=match selectedSeats with
                                                         |[]->"nothing"
                                                         |_->
-                                                           r
+                                                           selectedSeats
                                                            |>List.map( fun (r,s)->sprintf "%d%c" r s)
                                                            |>String.concat(";")
 
-                                sprintf "You've just reserved %s on the flight %s" selected flightId                              
+                                sprintf "You've just reserved %s on the flight %s" selected id                              
                                 |>say)
                         (fun id->DB.reservationsTable.[id])
         let confirmKeyboard() = ConfirmKeyboard.create "Are you sure?"
