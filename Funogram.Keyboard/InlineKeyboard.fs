@@ -88,7 +88,7 @@ module InlineKeyboard=
 
  let private handleCallback (kb:KeyboardDefinition<'a>) (q:CallbackQuery)=
         let extractTypePayload (parts:string[])=
-            if parts.[0]=kb.Id then Some (parts.[1], parts.[2])
+            if parts.[0]=kb.Id then Some (parts.[1], parts|>Array.skip(2)|>String.concat "|")
             else None
         let skip()=(Api.answerCallbackQueryBase(Some(q.Id)) None None None None)
         let delete()=Api.deleteMessage(q.Message.Value.Chat.Id)(q.Message.Value.MessageId)
