@@ -66,7 +66,7 @@ let processMessageBuild config =
                                 |>say)
                         (fun id->DB.reservationsTable.[id])
         let confirmKeyboard() = ConfirmKeyboard.create "Are you sure?"
-                                  (fun (_,answer) -> match answer with
+                                  (fun answer -> match answer with
                                                     | true -> say ("You have just pressed yes")
                                                     | false -> say ("You have just pressed no"))
         let cmds=[

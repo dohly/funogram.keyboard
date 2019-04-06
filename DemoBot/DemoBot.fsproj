@@ -18,4 +18,8 @@
     <PackageReference Include="Funogram.Keyboard.Calendar" Version="1.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Funogram.Keyboard.Choice\Funogram.Keyboard.Choice.fsproj" />
+  </ItemGroup>
+
 </Project>
