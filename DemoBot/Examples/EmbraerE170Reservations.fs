@@ -34,11 +34,11 @@ module EmbraerE170Reservations=
         HideAfterConfirm=true
         InitialState=[]
         GetMessageText=fun _->text
-        Serialize=List.map(seatToStr)>>String.concat ";"        
+        Serialize=List.map(seatToStr)>>String.concat "|"        
         TryDeserialize=fun seats->
                         try
                             if seats.Length=0 then Some []
-                            else  seats.Split(';')|>Array.map(strToSeat)|>Array.toList|>Some
+                            else  seats.Split('|')|>Array.map(strToSeat)|>Array.toList|>Some
                         with
                         |_->None
         DoWhenConfirmed=callback
