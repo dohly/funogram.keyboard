@@ -8,7 +8,7 @@ module FSharpTestExample=
  open System
  let private cfg items={
      Items=items|>dict
-     ItemsPerRow=4
+     ItemsPerRow=2
      ConfirmButtonText="OK"
      CancelButton="I don't know"|>Some
  }
@@ -18,8 +18,18 @@ module FSharpTestExample=
  type Question=SingleAnswer of TestData*int|MultipleAnswers of TestData*int list
  
  let questions= [|
-     SingleAnswer (("F1","Whaat?",[(1,"C");(2,"W1");(3,"W2");(4,"W4")]), 1)
-     MultipleAnswers (("F2", "WAAAT?", [(1,"C");(2,"W1");(3,"W2");(4,"C")]), [1;4])
+     SingleAnswer      (("F1","What is F#?",
+                         [(1,".NET FP lanuage");(2,"Do diesis");
+                          (3,"Bad word");(4,"Don't know")]), 
+                        1)
+
+     MultipleAnswers (("F2", "What are the features of F#?", 
+                         [(1,"Type inference");(2,"WYSIWYG for WPF");
+                          (3,"Inline assembly");(4,"Pattern matching")]),
+                        
+                        [1;4])
+                          
+      //..... a lot of questions
    |]
  
  let show bot toid onCompleted=
@@ -28,7 +38,7 @@ module FSharpTestExample=
     let askN data correctIds onAnswer=
            let (id, text,items)=data
            let c=cfg items
-           multiple None c id text (sprintf "[%s]") 
+           multiple None c id text (sprintf ">%s<") 
                     (fun (_, answer)->
                        let expected=Set.ofList correctIds
                        let actual=Set.ofList answer
