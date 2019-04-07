@@ -2,8 +2,7 @@ namespace Funogram.Keyboard
 
 open System.Collections.Generic
 open System
-[<RequireQualifiedAccess>]
-module ChoiceKeyboard=
+module Choice=
     open Funogram.Keyboard.Inline
     type Settings={
         Items:IDictionary<int,string>
@@ -11,8 +10,10 @@ module ChoiceKeyboard=
         ConfirmButtonText:string
         CancelButton:string option
     }
-    
-    let multiple cfg limit questionId text formatSelected callback
+    let private toRows perRow=Seq.mapi(fun i k->(i,k))
+                              >>Seq.groupBy(fun (i,k)->i/perRow)
+                              >>Seq.toList
+    let multiple limit cfg questionId text formatSelected callback
         :KeyboardDefinition<int list>={
         Id=questionId
         DisableNotification=false
@@ -36,13 +37,14 @@ module ChoiceKeyboard=
                  let mutable text=cfg.Items.[s]
                  if (alreadySelected) then text<-formatSelected text
                  let newState=if alreadySelected then List.filter(fun x->x<>s) selected
-                                                 else s::selected|>List.truncate(limit)
+                                                 else
+                                                    let added=s::selected
+                                                    match limit with
+                                                        |Some l->added|>List.truncate(l)
+                                                        |None->added
                  B(text, newState)               
                keys {
-                      let rows=cfg.Items.Keys
-                                |>Seq.mapi(fun i k->(i,k))
-                                |>Seq.groupBy(fun (i,k)->(i-1)/cfg.ItemsPerRow)
-                                |>Seq.toList
+                      let rows=cfg.Items.Keys|>toRows cfg.ItemsPerRow                                
                       for (_,row) in rows do   
                            yield! row|>Seq.map(fun (_,k)->btn k)
                       let any=selected|>List.isEmpty|>not
@@ -70,10 +72,7 @@ module ChoiceKeyboard=
             fun keys _->
                let OK=keys.Confirm
                keys {
-                      let rows=cfg.Items
-                                |>Seq.mapi(fun i k->(i,k))
-                                |>Seq.groupBy(fun (i,k)->(i-1)/cfg.ItemsPerRow)
-                                |>Seq.toList
+                      let rows=cfg.Items|>toRows cfg.ItemsPerRow
                       for (_,row) in rows do   
                            yield! row|>Seq.map(fun (_,KeyValue(id,text))->
                                                         OK(text, id|>Some))                      

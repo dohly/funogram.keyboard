@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Examples\FSharpTestExample.fs" />
     <Compile Include="Examples\EmbraerE170Reservations.fs" />
     <Compile Include="Examples\ConfirmKeyboard.fs" />
     <Compile Include="Program.fs" />
