@@ -67,12 +67,18 @@ let processMessageBuild config =
                         (fun id->DB.reservationsTable.[id])
         let confirmKeyboard() = ConfirmKeyboard.create "Are you sure?"
                                   (fun (_,answer) -> match answer with
-                                                    | true -> say ("You have just pressed yes")
-                                                    | false -> say ("You have just pressed no"))
+                                                      | true -> say ("You have just pressed yes")
+                                                      | false -> say ("You have just pressed no"))
+        let format (q,correct) = 
+            let c=if correct then "✓" else "✘"
+            String.Format("`{0} {1}`",c, q)
+        let reportTestResult=Seq.map(fun (KeyValue(k,v))->format (k, v))>>String.concat "\r\n">>say
+        let test()=FSharpTestExample.show bot userId reportTestResult
         let cmds=[
                 cmd "/calendar"  (fun _ -> showKeyboard (calendar()))
                 cmd "/flight"  (fun _ -> Random().Next(0,3)|>seats|>showKeyboard)
                 cmd "/confirm"  (fun _ -> showKeyboard (confirmKeyboard()))
+                cmd "/test"  (fun _ -> test())
             ]
         let notHandled =
             processCommands ctx (cmds @ InlineKeyboard.getRegisteredHandlers())

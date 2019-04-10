@@ -7,7 +7,9 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "DemoBot", "DemoBot\DemoBot.
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Funogram.Keyboard", "Funogram.Keyboard\Funogram.Keyboard.fsproj", "{836AA4FE-77C0-4502-8952-55094277FFE8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Funogram.Keyboard.Calendar", "Funogram.Keyboard.Calendar\Funogram.Keyboard.Calendar.fsproj", "{4359C43D-A1CA-4FCC-828E-6C91F30BFEE0}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Funogram.Keyboard.Calendar", "Funogram.Keyboard.Calendar\Funogram.Keyboard.Calendar.fsproj", "{4359C43D-A1CA-4FCC-828E-6C91F30BFEE0}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Funogram.Keyboard.Choice", "Funogram.Keyboard.Choice\Funogram.Keyboard.Choice.fsproj", "{8F8DE97E-CF9F-4014-B65F-1A386ABD67CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{4359C43D-A1CA-4FCC-828E-6C91F30BFEE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4359C43D-A1CA-4FCC-828E-6C91F30BFEE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4359C43D-A1CA-4FCC-828E-6C91F30BFEE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F8DE97E-CF9F-4014-B65F-1A386ABD67CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F8DE97E-CF9F-4014-B65F-1A386ABD67CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F8DE97E-CF9F-4014-B65F-1A386ABD67CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F8DE97E-CF9F-4014-B65F-1A386ABD67CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
