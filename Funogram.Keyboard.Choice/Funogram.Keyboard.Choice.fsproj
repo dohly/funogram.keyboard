@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Ivan Marinin</Authors>
+    <Description>Funogram.Keyboard extension to build question-like keyboards with a predefined set of answers</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

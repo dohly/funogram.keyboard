@@ -21,9 +21,11 @@ let mutable botToken = "none"
 let processMessageBuild config =
 
     let defaultText = """⭐️Keyboard demo bot:
-    /calendar - Calendar keyboard example
+     
+    /calendar - Funogram.Keyboard.Calendar keyboard example
     /flight - Reserve seats in Embraer E170 example
-    /confirm - Confirm keyboard example"""
+    /confirm - Confirm keyboard example
+    /test - Funogram.Keyboard.Choice example"""
 
 
     let processResultWithValue (result: Result<'a, ApiResponseError>) =
