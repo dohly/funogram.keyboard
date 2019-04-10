@@ -3,22 +3,19 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.3.0</Version>
     <Authors>Ivan Marinin</Authors>
-    <Description>Calendar inline keyboard for Funogram</Description>
-    <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
-    <PackageLicenseUrl></PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <Description>Funogram.Keyboard extension to build question-like keyboards with a predefined set of answers</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/dohly/funogram.keyboard</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dohly/funogram.keyboard</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Calendar.fs" />
+    <Compile Include="Choice.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Funogram.Keyboard" Version="1.3.0" />
+    <PackageReference Include="Funogram.Keyboard" Version="1.3.1" />
   </ItemGroup>
 
 </Project>
