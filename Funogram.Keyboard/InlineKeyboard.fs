@@ -2,7 +2,10 @@
 
 open Funogram.Types
 open Funogram
-open Funogram.RequestsTypes
+open Funogram.Telegram.RequestsTypes
+open Funogram.Telegram.Types
+open Funogram.Telegram.Bot
+open Funogram.Telegram
 
 module internal Constants=
      [<Literal>]
@@ -26,6 +29,8 @@ type KeyboardBuilder<'TState>(kb:KeyboardDefinition<'TState>)=
       CallbackGame = None
       SwitchInlineQuery = None
       SwitchInlineQueryCurrentChat = None
+      LoginUrl=None
+      Pay=None
      }
     let btn def=
         let toBtn t label value=value|>kb.Serialize|>inlineBtn t label
@@ -60,8 +65,6 @@ and KeyboardDefinition<'TState>={
 
 [<AutoOpen>]
 module InlineKeyboard=
- open Funogram.RequestsTypes
- open Bot
  open System.Collections.Concurrent
 
  [<Literal>]
@@ -72,7 +75,7 @@ module InlineKeyboard=
  let private CHANGE_STATE="CHANGE_STATE"
  let private keyboardHandlers=ConcurrentDictionary<string,(UpdateContext->bool)>()
  let getRegisteredHandlers()=keyboardHandlers.Values|>Seq.toList
-
+ 
  type private HandleResult<'state>=
             |Edited of EditMessageTextReq
             |Empty of AnswerCallbackQueryReq
@@ -125,24 +128,45 @@ module InlineKeyboard=
          let! typeAndPayload=extractTypePayload parts
          return! switch typeAndPayload
         }  
- 
- let private tryHandleUpdate (bot:IBotRequest->unit) (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
-    let r=optional{            
+ let processResultWithValue (result: Result<'x, ApiResponseError>) =
+     match result with
+     | Ok v -> Some v
+     | Error e ->
+         printfn "Server error: %s" e.Description
+         None
+
+ let processResult (result: Result<'x, ApiResponseError>) =
+     processResultWithValue result |> ignore
+
+ let botResult cfg data = Api.api cfg data |> Async.RunSynchronously
+ let bot cfg data =  botResult cfg data |> processResult
+
+ let private tryHandleUpdate (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
+    let r=optional{                 
             let! q=ctx.Update.CallbackQuery
             let! hr= handleCallback kb q      
             return match hr with
-                    |Empty resp->resp|>bot|>ignore
-                    |Edited resp->resp|>bot|>ignore
-                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot
+                    |Empty resp->resp|>bot ctx.Config
+                    |Edited resp->resp|>bot ctx.Config
+                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot ctx.Config
                                              deleted|>ignore
                                              (kb.Id,state)|>kb.DoWhenConfirmed
            }
     r.IsNone
- let show (bot:IBotRequest->unit) toId (kb:KeyboardDefinition<'a>) =
-        keyboardHandlers.[kb.Id]<-tryHandleUpdate bot kb
+
+ 
+ type botFn<'a>=IRequestBase<'a>->unit
+       
+ let mkRequest<'r, 'a when 'a :> IRequestBase<'r>> (fn:botFn<'r>) =
+     fun (request: IBotRequest) -> fn (request :?> 'a)
+
+ //let mybot:botFn<'a>=fun x->()
+ 
+ let show toId (kb:KeyboardDefinition<'a>) (ctx:UpdateContext) =
+        keyboardHandlers.[kb.Id]<-tryHandleUpdate kb
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
         let markup=keys|>build|>Markup.InlineKeyboardMarkup
         let text=kb.InitialState|>kb.GetMessageText
         let req=Api.sendMessageMarkup toId text markup
         {req with DisableNotification=Some kb.DisableNotification}
-        |>bot|>ignore
+        |>bot ctx.Config|>ignore

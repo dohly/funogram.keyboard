@@ -3,15 +3,14 @@
 open System.IO
 open Funogram.Api
 open Funogram.Types
-open Funogram.Bot
-open Funogram.Types
-open FunHttp
-open System.Net.Http
+open Funogram.Telegram.Bot
 open Funogram.Keyboard
 open Funogram.Keyboard.Inline
 open DemoBot.Examples
 open Funogram.Keyboard
 open System
+open Funogram.Telegram
+open Funogram.Telegram.Types
 
 
 [<Literal>]
@@ -38,15 +37,16 @@ let processMessageBuild config =
     let processResult (result: Result<'a, ApiResponseError>) =
         processResultWithValue result |> ignore
 
-    let botResult data = apiUntyped config data |> Async.RunSynchronously
+    let botResult data = Api.api config data |> Async.RunSynchronously
     let bot data = botResult data |> processResult
+
     let updateArrived ctx =
         let userId = if ctx.Update.Message.IsSome then ctx.Update.Message.Value.From.Value.Id
                      else ctx.Update.CallbackQuery.Value.From.Id       
-        let sendMessageFormatted text parseMode = (sendMessageBase (ChatId.Int(userId)) text (Some parseMode) None None None None) |> bot
+        let sendMessageFormatted text parseMode = (Api.sendMessageBase (ChatId.Int(userId)) text (Some parseMode) None None None None) |> bot
         let say s= sendMessageFormatted s ParseMode.Markdown     
         let showKeyboard def=
-                InlineKeyboard.show bot userId def
+                InlineKeyboard.show userId def
         let calendar()=Calendar.create  
                         "When is your birthday?" 
                         (fun (_,date)->say (date.ToLongDateString()))
@@ -75,17 +75,17 @@ let processMessageBuild config =
             let c=if correct then "✓" else "✘"
             String.Format("`{0} {1}`",c, q)
         let reportTestResult=Seq.map(fun (KeyValue(k,v))->format (k, v))>>String.concat "\r\n">>say
-        let test()=FSharpTestExample.show bot userId reportTestResult
+        let test()=FSharpTestExample.show userId reportTestResult
         let cmds=[
-                cmd "/calendar"  (fun _ -> showKeyboard (calendar()))
-                cmd "/flight"  (fun _ -> Random().Next(0,3)|>seats|>showKeyboard)
-                cmd "/confirm"  (fun _ -> showKeyboard (confirmKeyboard()))
+                cmd "/calendar"  (showKeyboard (calendar()))
+                cmd "/flight"  (Random().Next(0,3)|>seats|>showKeyboard)
+                cmd "/confirm"  (showKeyboard (confirmKeyboard()))
                 cmd "/test"  (fun _ -> test())
             ]
         let notHandled =
             processCommands ctx (cmds @ InlineKeyboard.getRegisteredHandlers())
         if notHandled then             
-            bot (sendMessage userId defaultText)           
+            bot (Api.sendMessage userId defaultText)           
     updateArrived
 
 let start token =
