@@ -75,12 +75,12 @@ let processMessageBuild config =
             let c=if correct then "✓" else "✘"
             String.Format("`{0} {1}`",c, q)
         let reportTestResult=Seq.map(fun (KeyValue(k,v))->format (k, v))>>String.concat "\r\n">>say
-        let test()=FSharpTestExample.show userId reportTestResult
+        let test ctx=FSharpTestExample.show ctx userId reportTestResult
         let cmds=[
                 cmd "/calendar"  (showKeyboard (calendar()))
                 cmd "/flight"  (Random().Next(0,3)|>seats|>showKeyboard)
                 cmd "/confirm"  (showKeyboard (confirmKeyboard()))
-                cmd "/test"  (fun _ -> test())
+                cmd "/test"  (test)
             ]
         let notHandled =
             processCommands ctx (cmds @ InlineKeyboard.getRegisteredHandlers())

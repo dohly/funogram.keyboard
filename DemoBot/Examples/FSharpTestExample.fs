@@ -32,7 +32,7 @@ module FSharpTestExample=
       //..... a lot of questions
    |]
  
- let show toid onCompleted=
+ let show ctx toid onCompleted=
     let testResults=Dictionary<string,bool>()    
     let registerAnswer (q,c)=testResults.[q]<-c
     let askN data correctIds onAnswer=
@@ -62,7 +62,7 @@ module FSharpTestExample=
             let! i = inbox.Receive()
             if i>=questions.Length then testResults|>onCompleted
             else ask questions.[i] (fun a->registerAnswer a
-                                           i+1|>inbox.Post)
+                                           i+1|>inbox.Post) ctx
             // loop to top
             return! messageLoop()  
         }
