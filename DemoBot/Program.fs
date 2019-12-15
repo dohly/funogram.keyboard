@@ -46,8 +46,8 @@ let processMessageBuild config =
                      else ctx.Update.CallbackQuery.Value.From.Id       
         let sendMessageFormatted text parseMode = (Api.sendMessageBase (ChatId.Int(userId)) text (Some parseMode) None None None None) |> bot
         let say s= sendMessageFormatted s ParseMode.Markdown     
-        let showKeyboard def=
-                InlineKeyboard.show onsuccess onerror userId def
+        let showKeyboard def updCtx=
+                InlineKeyboard.show onsuccess onerror userId (def()) updCtx.Config
         let calendar()=Calendar.create  
                         "When is your birthday?" 
                         (fun (_,date)->say (date.ToLongDateString()))
@@ -68,6 +68,8 @@ let processMessageBuild config =
                                 sprintf "You've just reserved %s on the flight %s" selected id                              
                                 |>say)
                         (fun id->DB.reservationsTable.[id])
+
+        let randomSeats()=Random().Next(0,3)|>seats
         let confirmKeyboard() = ConfirmKeyboard.create "Are you sure?"
                                   (fun (_,answer) -> match answer with
                                                       | true -> say ("You have just pressed yes")
@@ -76,11 +78,11 @@ let processMessageBuild config =
             let c=if correct then "✓" else "✘"
             String.Format("`{0} {1}`",c, q)
         let reportTestResult=Seq.map(fun (KeyValue(k,v))->format (k, v))>>String.concat "\r\n">>say
-        let test ctx=FSharpTestExample.show ctx userId  onsuccess onerror reportTestResult
+        let test ctx=FSharpTestExample.show ctx.Config userId  onsuccess onerror reportTestResult
         let cmds=[
-                cmd "/calendar"  (showKeyboard (calendar()))
-                cmd "/flight"  (Random().Next(0,3)|>seats|>showKeyboard)
-                cmd "/confirm"  (showKeyboard (confirmKeyboard()))
+                cmd "/calendar"  (showKeyboard calendar)
+                cmd "/flight"  (showKeyboard randomSeats)
+                cmd "/confirm"  (showKeyboard confirmKeyboard)
                 cmd "/test"  (test)
             ]
         let notHandled =

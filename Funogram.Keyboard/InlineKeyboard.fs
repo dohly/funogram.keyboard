@@ -162,7 +162,7 @@ module InlineKeyboard=
 
  //let mybot:botFn<'a>=fun x->()
  
- let show onsuccess onerror toId (kb:KeyboardDefinition<'a>) (ctx:UpdateContext) =
+ let show onsuccess onerror toId (kb:KeyboardDefinition<'a>) (config:BotConfig) =
         keyboardHandlers.[kb.Id]<-tryHandleUpdate kb onsuccess onerror
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
         let markup=keys|>build|>Markup.InlineKeyboardMarkup
@@ -170,5 +170,5 @@ module InlineKeyboard=
         let req=Api.sendMessageMarkup toId text markup
         let reqWithNotifications={req with DisableNotification=Some kb.DisableNotification}
 
-        bot ctx.Config reqWithNotifications onsuccess onerror
+        bot config reqWithNotifications onsuccess onerror
         |>ignore
