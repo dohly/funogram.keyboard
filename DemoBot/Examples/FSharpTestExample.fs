@@ -32,7 +32,7 @@ module FSharpTestExample=
       //..... a lot of questions
    |]
  
- let show ctx toid onCompleted=
+ let show ctx toid onSuccess onError onCompleted=
     let testResults=Dictionary<string,bool>()    
     let registerAnswer (q,c)=testResults.[q]<-c
     let askN data correctIds onAnswer=
@@ -44,13 +44,13 @@ module FSharpTestExample=
                        let actual=Set.ofList answer
                        let difference=Set.difference expected actual
                        onAnswer(id, difference=Set.empty))
-          |>InlineKeyboard.show toid
+          |>InlineKeyboard.show onSuccess onError toid
     let ask1 data correctId onAnswer=
         let (id, text,items)=data    
         let c=cfg items
         single c id text
                  (fun _ answer-> onAnswer(id,answer=correctId))
-        |>InlineKeyboard.show toid
+        |>InlineKeyboard.show onSuccess onError toid
     let ask=
         function
         |SingleAnswer (q,c)->ask1 q c

@@ -26,13 +26,14 @@ let processMessageBuild config =
     /confirm - Confirm keyboard example
     /test - Funogram.Keyboard.Choice example"""
 
-
+    let onsuccess v=
+            // todo 
+            ()
+    let onerror (e:ApiResponseError)=printfn "Error: %s" e.Description
     let processResultWithValue (result: Result<'a, ApiResponseError>) =
         match result with
-        | Ok v -> Some v
-        | Error e ->
-            printfn "Error: %s" e.Description
-            None
+        | Ok v -> onsuccess v
+        | Error e ->onerror e
 
     let processResult (result: Result<'a, ApiResponseError>) =
         processResultWithValue result |> ignore
@@ -46,7 +47,7 @@ let processMessageBuild config =
         let sendMessageFormatted text parseMode = (Api.sendMessageBase (ChatId.Int(userId)) text (Some parseMode) None None None None) |> bot
         let say s= sendMessageFormatted s ParseMode.Markdown     
         let showKeyboard def=
-                InlineKeyboard.show userId def
+                InlineKeyboard.show onsuccess onerror userId def
         let calendar()=Calendar.create  
                         "When is your birthday?" 
                         (fun (_,date)->say (date.ToLongDateString()))
@@ -75,7 +76,7 @@ let processMessageBuild config =
             let c=if correct then "✓" else "✘"
             String.Format("`{0} {1}`",c, q)
         let reportTestResult=Seq.map(fun (KeyValue(k,v))->format (k, v))>>String.concat "\r\n">>say
-        let test ctx=FSharpTestExample.show ctx userId reportTestResult
+        let test ctx=FSharpTestExample.show ctx userId  onsuccess onerror reportTestResult
         let cmds=[
                 cmd "/calendar"  (showKeyboard (calendar()))
                 cmd "/flight"  (Random().Next(0,3)|>seats|>showKeyboard)

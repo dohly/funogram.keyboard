@@ -128,27 +128,27 @@ module InlineKeyboard=
          let! typeAndPayload=extractTypePayload parts
          return! switch typeAndPayload
         }  
- let processResultWithValue (result: Result<'x, ApiResponseError>) =
+ let processResult (result: Result<'x, ApiResponseError>) onSucces onFail =
      match result with
-     | Ok v -> Some v
-     | Error e ->
-         printfn "Server error: %s" e.Description
-         None
+     | Ok v -> onSucces v |>ignore
+     | Error e ->onFail e |>ignore
+         
 
- let processResult (result: Result<'x, ApiResponseError>) =
-     processResultWithValue result |> ignore
+ //let processResult (result: Result<'x, ApiResponseError>) =
+ //    processResultWithValue result |> ignore
 
  let botResult cfg data = Api.api cfg data |> Async.RunSynchronously
- let bot cfg data =  botResult cfg data |> processResult
+ let bot cfg =  botResult cfg >> processResult
 
- let private tryHandleUpdate (kb:KeyboardDefinition<'a>) (ctx:UpdateContext)=
+ let private tryHandleUpdate (kb:KeyboardDefinition<'a>) (onsuccess:obj->unit) onerror (ctx:UpdateContext)=
     let r=optional{                 
             let! q=ctx.Update.CallbackQuery
             let! hr= handleCallback kb q      
+            let answer resp= bot ctx.Config resp onsuccess onerror
             return match hr with
-                    |Empty resp->resp|>bot ctx.Config
-                    |Edited resp->resp|>bot ctx.Config
-                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then resp|>bot ctx.Config
+                    |Empty resp->answer resp
+                    |Edited resp->answer resp
+                    |Confirmed (state,resp)->let deleted=if kb.HideAfterConfirm then answer resp
                                              deleted|>ignore
                                              (kb.Id,state)|>kb.DoWhenConfirmed
            }
@@ -162,11 +162,13 @@ module InlineKeyboard=
 
  //let mybot:botFn<'a>=fun x->()
  
- let show toId (kb:KeyboardDefinition<'a>) (ctx:UpdateContext) =
-        keyboardHandlers.[kb.Id]<-tryHandleUpdate kb
+ let show onsuccess onerror toId (kb:KeyboardDefinition<'a>) (ctx:UpdateContext) =
+        keyboardHandlers.[kb.Id]<-tryHandleUpdate kb onsuccess onerror
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
         let markup=keys|>build|>Markup.InlineKeyboardMarkup
         let text=kb.InitialState|>kb.GetMessageText
         let req=Api.sendMessageMarkup toId text markup
-        {req with DisableNotification=Some kb.DisableNotification}
-        |>bot ctx.Config|>ignore
+        let reqWithNotifications={req with DisableNotification=Some kb.DisableNotification}
+
+        bot ctx.Config reqWithNotifications onsuccess onerror
+        |>ignore
