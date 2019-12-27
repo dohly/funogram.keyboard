@@ -80,11 +80,6 @@ module InlineKeyboard=
             |Edited of EditMessageTextReq
             |Empty of AnswerCallbackQueryReq
             |Confirmed of 'state*DeleteMessageReq
-
- //let private bot config data = Funogram.Api.api config data |> Async.RunSynchronously |> ignore      
-    
- 
-
      
  let private build buttons=      
      { InlineKeyboard =buttons }
@@ -133,10 +128,6 @@ module InlineKeyboard=
      | Ok v -> onSucces v |>ignore
      | Error e ->onFail e |>ignore
          
-
- //let processResult (result: Result<'x, ApiResponseError>) =
- //    processResultWithValue result |> ignore
-
  let botResult cfg data = Api.api cfg data |> Async.RunSynchronously
  let bot cfg =  botResult cfg >> processResult
 
@@ -154,14 +145,6 @@ module InlineKeyboard=
            }
     r.IsNone
 
- 
- type botFn<'a>=IRequestBase<'a>->unit
-       
- let mkRequest<'r, 'a when 'a :> IRequestBase<'r>> (fn:botFn<'r>) =
-     fun (request: IBotRequest) -> fn (request :?> 'a)
-
- //let mybot:botFn<'a>=fun x->()
- 
  let show onsuccess onerror toId (kb:KeyboardDefinition<'a>) (config:BotConfig) =
         keyboardHandlers.[kb.Id]<-tryHandleUpdate kb onsuccess onerror
         let keys=kb.InitialState|>kb.GetKeysByState (KeyboardBuilder(kb))
